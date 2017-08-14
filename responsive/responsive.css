@@ -1,0 +1,54 @@
+
+/* For width 1400px and larger: */
+@media only screen and (min-width: 1401px) {
+    .ralphy { 
+       width: 250px;
+       height: 187px;
+       background: url(ralphy.gif) 0 0; 
+    }
+}
+
+/* For width larger than 1200px and smaller than or equal to 1400px: */
+@media only screen and (min-width: 1201px) and (max-width: 1400px) {
+    .ralphy { 
+       width: 250px;
+       height: 187px;
+       background: url(ralphy.gif) -250px 0; 
+    }
+}
+
+/* For width larger than 1000px and smaller than or equal to 1200px: */
+@media only screen and (min-width: 1001px) and (max-width: 1200px) {
+    .ralphy { 
+       width: 250px;
+       height: 187px;
+       background: url(ralphy.gif) 0 -187px; 
+    }
+}
+
+/* For width larger than 800px and smaller than or equal to 1000px: */
+@media only screen and (min-width: 801px) and (max-width: 1000px) {
+    .ralphy { 
+       width: 250px;
+       height: 187px;
+       background: url(ralphy.gif) -250px -187px; 
+    }
+}
+
+/* For width larger than 600px and smaller than or equal to 800px: */
+@media only screen and (min-width: 601px) and (max-width: 800px) {
+    .ralphy { 
+       width: 250px;
+       height: 187px;
+       background: url(ralphy.gif) 0 -374px; 
+    }
+}
+
+/* For width smaller than or equal to 600px: */
+@media only screen and (max-width: 600px) {
+    .ralphy { 
+       width: 250px;
+       height: 187px;
+       background: url(ralphy.gif) -250px -374px; 
+    }
+}
