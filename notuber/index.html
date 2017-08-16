@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Drivers and Passengers</title>
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry&sensor=false"></script>
+	<link rel="stylesheet" href="map.css" />
+</head>
+    
+<body onload="init()">
+    <div id="googleMap"></div>
+
+    <script>
+
+    <!------------------------------------- Variable Declarations ------------------------------------> 
+    		var myUsername = "N10SCqi5"; <!-- My unique username given by Ming -->
+    		var meters_to_miles_ratio = 0.000621371192; <!-- convertion from meters to miles. Source GOOGLE -->
+            var myLat = 0;
+			var myLng = 0;
+			var me = new google.maps.LatLng(myLat, myLng);
+			var request = new XMLHttpRequest();
+			var data_api = "https://polar-spire-83537.herokuapp.com/submit";
+			var params;
+			var info_array;
+			
+			var myOptions = {
+						zoom: 18, // The larger the zoom number, the bigger the zoom
+						center: me,
+						mapTypeId: google.maps.MapTypeId.ROADMAP
+					};
+			var map;
+			var info_array;
+			var infowindow = new google.maps.InfoWindow();
+			var driver = "yes"; <!-- used for determining which icon set to use -->
+			var otherLatLng;
+			var icons = {
+				no: {
+					icon: new google.maps.MarkerImage(
+    						'black_car.png',
+   							null, <!-- size is determined at runtime -->
+    						null, <!-- origin is 0,0 -->
+    						null, <!-- anchor is bottom center of the scaled image -->
+    						new google.maps.Size(50, 50)
+							)
+				},
+				yes: {
+					icon: new google.maps.MarkerImage(
+    						'passenger.png',
+   							null, <!-- size is determined at runtime -->
+    						null, <!-- origin is 0,0 -->
+    						null, <!-- anchor is bottom center of the scaled image -->
+    						new google.maps.Size(50, 50)
+							)
+				}
+			};
+			var myIcon = new google.maps.MarkerImage(
+    						'myIcon.png',
+   							null, <!-- size is determined at runtime -->
+    						null, <!-- origin is 0,0 -->
+    						null, <!-- anchor is bottom center of the scaled image -->
+    						new google.maps.Size(70, 70)
+							);
+			
+			<!------------------------------------- Initializations ------------------------------------>
+			function init()
+			{
+				get_info();
+				map = new google.maps.Map(document.getElementById("googleMap"), myOptions);
+				getMyLocation();
+				
+			}
+			
+
+			function getMyLocation() {
+				if (navigator.geolocation) { // the navigator.geolocation object is supported on your browser
+					navigator.geolocation.getCurrentPosition(function(position) {
+						//console.log("YESS");
+						myLat = position.coords.latitude;
+						myLng = position.coords.longitude;
+						renderMap();
+					});
+				}
+				else {
+					alert("Geolocation is not supported by your web browser.  What a shame!");
+				}
+			}
+
+			function renderMap()
+			{
+				me = new google.maps.LatLng(myLat, myLng);
+				
+				// Update map and go there...
+				map.panTo(me);
+
+				// Create a marker
+				var myMarker = new google.maps.Marker({
+					position: me,
+					title: myUsername,
+					icon: myIcon
+				});
+
+				myMarker.setMap(map);
+
+
+				//Open info window on click of myMarker
+				google.maps.event.addListener(myMarker, 'click', function() {
+					infowindow.setContent(myMarker.title);
+					infowindow.open(map, myMarker);
+				});
+			}
+
+			<!--------------------------------- JSON Parsing and Displaying Markers -------------------------------->
+			
+			<!-- This function gets the information from the data_api and it parsed by the displayInfo function -->
+			function get_info() {
+				
+				request.open("POST", data_api, true);
+				request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				request.onreadystatechange = displayInfo;
+
+				var params = "username="+myUsername+"&lat="+myLat+"&lng="+myLng;
+				request.send(params);
+			
+			}
+
+			function distance(otherLatLng) {
+				return (meters_to_miles_ratio * 
+				google.maps.geometry.spherical.computeDistanceBetween(me, otherLatLng));
+			}
+
+			<!-- Since my information is still NULL, I Initialize the markers and distance after my icon has been set -->
+			
+			function displayInfo() {
+				if (request.readyState == 4 && request.status == 200) {
+
+					theData = request.responseText;
+				
+					parsedData = JSON.parse(theData);
+
+					//section = document.getElementById("gooelMap");
+
+					if (typeof parsedData.passengers !== "undefined") {
+						driver = "yes"; <!-- I am the driver -->
+						info_array = parsedData.passengers;
+					} 
+					else {
+						info_array = parsedData.vehicles;
+						driver = "no";
+					}
+					set_other_markers();
+				}
+			}
+
+			function set_other_markers() {
+				var marker = new Array(info_array.length);
+
+				for(var i = 0; i < info_array.length; i++) {
+        			(function(i){ //new line 
+
+       				otherLatLng = new google.maps.LatLng(info_array[i].lat, info_array[i].lng);
+       				
+       				var markerTitle = info_array[i].username + " is "+ distance(otherLatLng) + " miles away.";
+
+        			marker[i] = new google.maps.Marker({
+                			title: markerTitle,                     
+                			position: new google.maps.LatLng(info_array[i].lat,info_array[i].lng),
+                			icon: icons[driver].icon
+            		});
+
+            		marker[i].setMap(map);
+
+            		infowindow[i] = new google.maps.InfoWindow({
+           				content: markerTitle
+       				});
+       				
+      				google.maps.event.addListener(marker[i], 'click', function() {
+           					infowindow[i].open(map, this);
+        				});
+        			})(i);
+				}
+			}
+    </script>
+</body>
+
+</html>

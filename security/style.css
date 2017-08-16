@@ -1,0 +1,39 @@
+body {
+	margin: 40px;
+	margin-top: 30px;
+	font-family: Roboto;
+}
+
+h1 {
+	color: darkgray;
+}
+
+h2 {
+	color: navy;
+	border-bottom-style: solid;
+	border-width: 2px;
+}
+
+subtitle {
+	font-weight: 900;
+}
+
+.subsubtitle {
+	margin-left: 40px;
+}
+
+div img {
+	width: 80%;
+	margin-left: 80px;
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+p1 {
+	padding-left: 80px;
+}
+
+li {
+	padding-bottom: 10px;
+
+}

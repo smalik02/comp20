@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>Security Check | Assignment #4 | Shehryar Malik</title>
+<meta charset="UTF-8">
+
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+
+</head>
+
+<body>
+  <h1> Homework #4 - Security Assessment of The Black Car Service </h1>
+  
+	<h2> Introduction </h2>
+
+		<p> This assessment tests the security of The Black Car Service and identifies security vulnerabilites. This includes both the client-side (assignment 2), and the server (homework 3), developed by Genevieve Silverman. </p>
+
+		<p> According to the specifications	she followed from her client, the client-side of BlackCar Service must send current location and other information, such as the username to a datastore. It must also then retrieve and display all of the information recieved, such as either the location of the vehicles or passengers. </p>
+
+		<p> The server side has three requirements. Firstly, it must fulfill a POST request. When an approved check-in request is submitted, the server will return a JSON string with all of the stored data. Secondly, the server must fulfill a GET request that parses a query and returns the last known location of the username if it is a vehicle as a JSON string. And lastly, the The Black Car server must display a list of information for all of the passengers. </p>
+
+		<p> This document identifies the vulnerabilities in the server. </p>
+
+	
+
+	<h2> Methodology </h2>
+
+		<p> Testing was first carried out in a "black-box" manner, using just would be available to an attacker. I used mostly simple tools, such as the curl command on terminal and Postman. Multiple vulnerabilities were found this way. </p>
+
+		<p> I then reviewed Genevieve's source code to find more logic errors and opportunities for exploitation.</p>
+
+
+
+	<h2> Abstract of Findings </h2>
+
+		<p> The vulnerabilities in this application occur in three major areas.</p>
+
+
+		<p> The first, and perhaps the greatest, is that this application trusts the user's input data. It assumes the input data is correct, but never asserts that correctness. The data is never sanitized or checked for malicious content, such as a script or an injection. Instead, it is directly submitted into the database, and as a result, harmful and undesireable effects occur. </p>
+
+
+		<p> A second vulnerability exists in that the database's capacity has a limit. It can only hold 500MB of data. An attacker could easily fill that quota, and once again, harmful and undesireable effects occur. I did not have enough time to perfrom the task, but one could run the shell script flood.sh for long enough and cause the server to halt. </p>
+
+
+		<p> Finally, this application offers no method of authentication. Although it checks that the login username is an "approved one/vehicle" any hacker could impersonate any other approved username. I would recommend placing the list of verified vehicles into another file and use APIs to authenticate a user. This was not in my opinion a direct security threat as APIs werent required for this assignment, but it should help strengthen the overall security of the app.</p>
+
+
+	<h2> Main Issues Found </h2>
+
+
+		<h3> 1. Cross-Site Scripting (XSS) </h3>
+
+		<ul>
+		<li> 
+			<subtitle> Method: </subtitle> <subtitleItem> /submit </subtitleItem> 
+		</li>
+
+		<li> 
+			<subtitle> Description: </subtitle> 
+
+			<subtitleItem> 
+				Through injection, I was able to insert malicious code into the webpage. This was done through the POST request, in /submit. I sent several harmful lines of code through the message field by wrapping it inside of a script tag. 
+			</subtitleItem>
+		</li>
+
+		<li> 
+			<subtitle> Execution: </subtitle>
+			<div class ="subsubtitle"> A. Sending an alert </div>
+			<p1> The command used: </p1>
+			<div> <img src="img/alert_code.png"> </div>
+			<p1> Here, I injected an window.alert() into to script tag which runs everytime the page is reloaded. </p1>
+			<div> <img src= "img/alert_img.png"> </div>
+			<div class ="subsubtitle"> B. Redirecting the page </div>
+			<p1> The command used: </p1>
+			<div> <img src="img/redirect_code.png"> </div>
+			<p1> In this hack, we injected an window.location="website_link_here", and again, this will run everytime the page is loaded, and will redirect to whatever the link is. </p1>
+			<div> <img src="img/redirect_img.png"> </div>
+
+		</li>
+
+		<li> <subtitle> Severity of the issue: HIGH </subtitle>
+			<div> <subtitleItem> This is an extremely dangerous vulnerability. Since hackers are capable of injecting any code into the website, they are essentially capable of breaking the website in a plethora of ways.
+			</subtitleItem> </div>
+
+		</li>
+		<li> 
+			<subtitle> Improvements: </subtitle>
+			<div> <subtitleItem> Sanitize the data. After reading the message string, and before inputting the document into the collection, test the strings for characters such as "<" and ">", and convert them to {$gt} and {$lt}. Extra testing could include testing for the word "script."! </subtitleItem> </div>
+		</li>
+
+		</ul>
+
+	<h3> 2. Injection </h3>
+	<ul> 
+		<li> 
+			<subtitle> Method: </subtitle> <subtitleItem> /submit </subtitleItem> 
+		</li>
+			
+		<li> 
+			<subtitle> Description: </subtitle> 
+				<subtitleItem> 
+				This problem is similar to the first one as html is again injected into the database. Instead of injecting the < script > tag, wrap the message in a < style > tag and therefore we can alter the webpage's visibility.
+				</subtitleItem>
+		</li>
+		<li> 
+			<subtitle> Execution: </subtitle>
+			<div> 
+				<p1> Through the style tag, we can make the page display nonviewable, such as hiding the body element.</p1> </div>
+				<p1> The command used: </p1>
+					<div> <img src="img/inject_code.png"> </div>
+				<p1> In this hack, we change the display of the body to none, effectively showing a blank screen. </p1>
+					<div> <img src="img/inject_img.png"> </div>
+		</li>
+
+		<li> <subtitle> Severity of the issue: MODERATE </subtitle>
+			<div> <subtitleItem> 
+				Though this attack does input malicious code into the server, it only affects the viewability of the website. If the user has knowledge of basic HTML and developer tools, the user can uncheck the harmful style element and the results would be visible again.
+
+			</subtitleItem> </div>
+		</li>
+		<li> 
+			<subtitle> Improvements: </subtitle>
+			<div> <subtitleItem> 
+				Similar to the issue above, an easy fix for this issue is to SANITIZE the data. Extra testing could include testing for the word "style."
+			</subtitleItem> </div>
+		</li>
+	</ul>
+
+	<h3> 3. Query Parameters </h3>
+	<ul> 
+		<li> 
+			<subtitle> Method: </subtitle> <subtitleItem> /vehicle.json </subtitleItem> 
+		</li>
+			
+		<li> 
+			<subtitle> Description: </subtitle> 
+				By sending a script that tries to delete the database as a query parameter, the server cannot handle this request and times out. Also, sending the username{$ne} causes the server to halt and return no response.
+			</subtitleItem>
+		</li>
+
+		<li> 
+			<subtitle> Execution: </subtitle>
+			<div> 
+				<p> The command </p>
+				<div> <img src="img/request_code.png"> </div>
+				<p> When a GET request is made with a script as the username or if the username{$ne}=anything, the server does not correctly parse the data. Instead, Postman receives no response. </p>
+				<p> And using Postman, we can see that a server error occurred </p>
+				<div> <img src="img/request_img.png"> </div>
+			</div>
+		</li>
+
+		<li> <subtitle> Severity of the issue: HIGH </subtitle>
+			<div> <subtitleItem> 
+				Putting a script or anything that isnt username=valid_vehicle in the query parameters caused the request to timeout.
+				</subtitleItem> </div>
+		</li>
+		<li> 
+			<subtitle> Improvements: </subtitle>
+			<div> <subtitleItem> 
+			After analyzing Genevieve's code, I believe I may have found the reason why her server does not correctly return the information. Her code: 
+			<div> <img src="img/Genevieve_code.png" style="width: 20%"> </div> 
+			Instead, after looking online, perhaps the query should be parsed differently by an equals sign. 
+			<div> <img src="img/mine.png" style="width: 20%"> </div> 
+			This would solve the issue.
+			</subtitleItem> </div>
+		</li>
+	</ul>
+
+	<h2> Conclusion </h2>
+		<p> The current issues with The Black Car Service makes it basically inoperable. The recommendations I've suggested should significantly reduce the site's vulnerabilites to basic attacks. The simple changes include sanitization of data, and a greater database capacity, but again, that comes at a cost. However, a greater structural problem exists in that anyone with an approved login can submit to any other login, basically rendering all of the data listed untrustworthy. 
+		</p>
+
+	<h2> References </h2>
+		<ul>
+			<li> <a href= "https://excess-xss.com">https://excess-xss.com</a> </li>
+			<li> <a href= "https://www.owasp.org/index.php/Testing_for_NoSQL_injection">https://www.owasp.org/index.php/Testing_for_NoSQL_injection</a> </li>
+			<li> <a href= "https://fonts.googleapis.com/css?family=Roboto">https://fonts.googleapis.com/css?family=Roboto</a> </li>
+		</ul>
+
+
+</body>
+	
